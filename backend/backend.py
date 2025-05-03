@@ -12,17 +12,10 @@ import shutil
 import os
 import uvicorn
 
-<<<<<<< Updated upstream
-# Custom Libraries
-from pinecone_query import init_resources, clear_resources, retrieve_drugs, get_medication_definitions_for_gemini
-from gemini_response import generate_medication_summary 
-from db import prescriptions_collection
-=======
 ##### Custom Libraries
 from pinecone_query import init_resources, clear_resources, retrieve_drugs
 from gemini_response import generate_medication_summary
 from db import prescriptions_collection, users_collection
->>>>>>> Stashed changes
 
 load_dotenv()
 UPLOAD_DIR = "uploads"
@@ -94,8 +87,6 @@ class UserData(BaseModel):
 async def api_entry():
     return {"Welcome": "RX-Check API"}
 
-<<<<<<< Updated upstream
-=======
 ## RESTRICTION: Frontend/client	Calls /query-drug/ repeatedly, stores list so implementation responsibility is on client##
 '''
 input: 
@@ -125,7 +116,6 @@ Output:
 
 '''
 
->>>>>>> Stashed changes
 @app.post("/query-drug/")
 async def query_drug(request: QueryRequest):
     query_text = request.query_text.strip()
@@ -177,8 +167,6 @@ async def generate_medication_plan(data: MedicationRequest):
         print(f"Error gen-erating plan: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-<<<<<<< Updated upstream
-=======
 
 
 class Prescription(BaseModel):
@@ -351,7 +339,6 @@ async def generate_medication_plan(data: MedicationRequest):
         print(f"Error gen-erating plan: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
->>>>>>> Stashed changes
 @app.post("/upload/")
 async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(...)):
     try:
@@ -363,10 +350,7 @@ async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(
             shutil.copyfileobj(file.file, f)
 
         prescription_data = {
-<<<<<<< Updated upstream
-=======
             "user_id": user_id,
->>>>>>> Stashed changes
             "prescriptions": [
                 {"pres_name": "TEMAZEPAM", "pres_strength": "10 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
                 {"pres_name": "CEFUROXIME", "pres_strength": "1.5 g", "refills": 2, "date_prescribed": "2025-04-04", "active": True},
@@ -376,20 +360,6 @@ async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(
             "date_uploaded": datetime.now(timezone.utc)
         }
 
-<<<<<<< Updated upstream
-        await prescriptions_collection.update_one(
-            {"user_id": user_id},
-            {
-                "$setOnInsert": {"family_members": ["mom456", "dad789"]},
-                "$push": {"documents": prescription_data}
-            },
-            upsert=True
-        )
-
-        os.remove(file_path)
-        return {"message": "Hardcoded prescription saved", "data": prescription_data}
-
-=======
         prescription_coll_exists = await prescriptions_collection.find_one({"user_id": user_id})
         if prescription_coll_exists:
             result = await prescriptions_collection.update_one(
@@ -409,12 +379,10 @@ async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(
             )
             return {"message": "Prescription created successfully", "data": prescription_data}
     
->>>>>>> Stashed changes
     except Exception as e:
         print("Internal Server Error:", e)
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-<<<<<<< Updated upstream
 @app.get("/prescriptions/{user_id}")
 async def get_active_prescriptions(user_id: str = Path(...)):
     user = await prescriptions_collection.find_one({"user_id": user_id})
@@ -422,18 +390,6 @@ async def get_active_prescriptions(user_id: str = Path(...)):
         return {"user_id": user_id, "active_prescriptions": []}
 
     active_prescriptions = []
-=======
-
-@app.get("/prescriptions/{user_id}")
-async def get_active_prescriptions(user_id: str = Path(...)):
-    user = await prescriptions_collection.find_one({"user_id": user_id})
-    
-    if not user:
-        return {"user_id": user_id, "prescriptions": []}
-
-    active_prescriptions = []
-
->>>>>>> Stashed changes
     for doc in user.get("documents", []):
         for med in doc.get("prescriptions", []):
             if med.get("active"):

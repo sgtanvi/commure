@@ -9,9 +9,6 @@ DB_NAME = os.getenv("DB_NAME")
 
 client = AsyncIOMotorClient(MONGODB_URI)
 db = client[DB_NAME]
-<<<<<<< Updated upstream
-prescriptions_collection = db["prescriptions"]
-=======
 prescriptions_collection = db["prescriptions"]
 users_collection = db["users"]
 # Function to check if the database connection is working
@@ -23,4 +20,3 @@ async def check_connection():
     except Exception as e:
         print(f"MongoDB connection error: {e}")
         return False
->>>>>>> Stashed changes
