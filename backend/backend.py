@@ -266,22 +266,6 @@ class MedicationRequest(BaseModel):
     medications: list[MedicationEntry]
     profile: PatientProfile
 
-class Prescription(BaseModel):
-    pres_name: str
-    pres_strength: str
-    refills: int
-    date_prescribed: str
-    active: bool
-
-class PrescriptionDocument(BaseModel):
-    prescriptions: List[Prescription]
-    date_uploaded: datetime
-
-class UserData(BaseModel):
-    user_id: str
-    family_members: Optional[List[str]] = []
-    documents: List[PrescriptionDocument] = []
-
 # === API Routes ===
 
 @app.get("/")
