@@ -13,7 +13,8 @@ import Stack from '@mui/material/Stack';
 import MuiCard from '@mui/material/Card';
 import { styled } from '@mui/material/styles';
 import ForgotPassword from '../molecules/forgot-password';
-
+import { User } from '../../App';
+import { useNavigate } from 'react-router-dom';
 const Card = styled(MuiCard)(({ theme }) => ({
     display: 'flex',
     flexDirection: 'column',
@@ -56,12 +57,22 @@ const Card = styled(MuiCard)(({ theme }) => ({
     },
     }));
 
-    export default function SignIn(props: { disableCustomTheme?: boolean }) {
+    interface SignInProps {
+        setUser: (user: User) => void
+    }
+
+    export default function SignIn({ setUser }: SignInProps) {
     const [emailError, setEmailError] = React.useState(false);
     const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
+    const [firstnameError, setFirstnameError] = React.useState(false);
+    const [firstnameErrorMessage, setFirstnameErrorMessage] = React.useState('');
+    const [lastnameError, setLastnameError] = React.useState(false);
+    const [lastnameErrorMessage, setLastnameErrorMessage] = React.useState('');
     const [passwordError, setPasswordError] = React.useState(false);
     const [passwordErrorMessage, setPasswordErrorMessage] = React.useState('');
     const [open, setOpen] = React.useState(false);
+
+    const navigate = useNavigate();
 
     const handleClickOpen = () => {
         setOpen(true);
@@ -72,20 +83,34 @@ const Card = styled(MuiCard)(({ theme }) => ({
     };
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-        if (emailError || passwordError) {
-        event.preventDefault();
-        return;
+        event.preventDefault(); // Prevent default form submission
+        
+        if (!validateInputs()) {
+            return;
         }
+        
         const data = new FormData(event.currentTarget);
-        console.log({
-        email: data.get('email'),
-        password: data.get('password'),
-        });
+        const newUser = {
+            email: data.get('email') as string,
+            password: data.get('password') as string,
+            firstname: data.get('firstname') as string,
+            lastname: data.get('lastname') as string,
+            conditions: [],
+            allergies: [],
+            family_members: [],
+            documents: "",
+        }
+
+        console.log(newUser);
+        setUser(newUser);
+        navigate('/');
     };
 
     const validateInputs = () => {
         const email = document.getElementById('email') as HTMLInputElement;
         const password = document.getElementById('password') as HTMLInputElement;
+        const firstname = document.getElementById('firstname') as HTMLInputElement;
+        const lastname = document.getElementById('lastname') as HTMLInputElement;
 
         let isValid = true;
 
@@ -107,6 +132,23 @@ const Card = styled(MuiCard)(({ theme }) => ({
         setPasswordErrorMessage('');
         }
 
+        if (!firstname.value || firstname.value.length < 2) {
+        setFirstnameError(true);
+        setFirstnameErrorMessage('First name must be at least 2 characters long.');
+        isValid = false;
+        } else {
+        setFirstnameError(false);
+        setFirstnameErrorMessage('');
+        }
+
+        if (!lastname.value || lastname.value.length < 2) {
+        setLastnameError(true);
+        setLastnameErrorMessage('Last name must be at least 2 characters long.');
+        isValid = false;
+        } else {
+        setLastnameError(false);
+        setLastnameErrorMessage('');
+        }
         return isValid;
     };
 
@@ -133,7 +175,39 @@ const Card = styled(MuiCard)(({ theme }) => ({
                 width: '100%',
                 gap: 2,
                 }}
-            >
+            ><FormControl>
+            <FormLabel htmlFor="email">First Name</FormLabel>
+            <TextField
+                error={firstnameError}
+                helperText={firstnameErrorMessage}
+                id="firstname"
+                type="firstname"
+                name="firstname"
+                placeholder="first name"
+                autoComplete="firstname"
+                autoFocus
+                required
+                fullWidth
+                variant="outlined"
+                color={emailError ? 'error' : 'primary'}
+            />
+            </FormControl><FormControl>
+                <FormLabel htmlFor="email">Last Name</FormLabel>
+                <TextField
+                    error={lastnameError}
+                    helperText={lastnameErrorMessage}
+                    id="lastname"
+                    type="lastname"
+                    name="lastname"
+                    placeholder="last name"
+                    autoComplete="lastname"
+                    autoFocus
+                    required
+                    fullWidth
+                    variant="outlined"
+                    color={emailError ? 'error' : 'primary'}
+                />
+                </FormControl>
                 <FormControl>
                 <FormLabel htmlFor="email">Email</FormLabel>
                 <TextField
@@ -177,7 +251,6 @@ const Card = styled(MuiCard)(({ theme }) => ({
                 type="submit"
                 fullWidth
                 variant="contained"
-                onClick={validateInputs}
                 >
                 Sign in
                 </Button>

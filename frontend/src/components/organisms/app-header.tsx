@@ -10,32 +10,37 @@ import {
     Typography,
     Link,
     Button,
+    Box,
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
-import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import { useIsMobile } from "../../hooks/use-mobile"
 import MobileHeaderMenu from "../molecules/mobile-header";
 import { MenuItem } from "../molecules/menu-node";
 import { Outlet } from "react-router-dom";
+import { User } from "../../App";
 
-export function AppHeader() {
+interface AppHeaderProps {
+    user: User | null
+}
+
+export function AppHeader({ user }: AppHeaderProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const isMobile = useIsMobile()
 
     const navItems = [
         {
-            text: "Home",
+            text: "Prescriptions",
             path: "/",
         },
         {
-            text: "About",
-            path: "/about",
+            text: "Conditions",
+            path: "/conditions",
         },
         {
-            text: "Contact",
-            path: "/contact",
-        },
+            text: "Allergies",
+            path: "/allergies",
+        }
     ] as MenuItem[]
     return (
         <div className="flex flex-col w-full min-h-screen">
@@ -104,6 +109,7 @@ export function AppHeader() {
                             ))}
                         </Stack> 
                     }
+                    {user === null ?
                     <Link 
                         href="/loginsignup" 
                         key="/loginsignup"
@@ -130,7 +136,24 @@ export function AppHeader() {
                         >
                             <Typography variant="body2" sx={{fontWeight: 700}} color="black">Login/Sign Up</Typography>
                         </Button>
-                    </Link>
+                    </Link> :
+                    <Box
+                    sx={{
+                        "&:focus": {
+                            outline: "none",
+                        },
+                        "&.Mui-focusVisible": {
+                            boxShadow: "none",
+                            backgroundColor: "transparent",
+                        },
+                        mr: 4,
+                        "&:hover": {
+                            backgroundColor: "#e0e0e0",
+                        }
+                    }}
+                    >
+                        <Typography variant="body2" sx={{fontWeight: 700}} color="black">{user.firstname} {user.lastname}</Typography>
+                    </Box>}
                 </Toolbar>
             </MuiAppBar>
             <MobileHeaderMenu isOpen={sidebarOpen} toggleMenu={() => setSidebarOpen(!sidebarOpen)} navItems={navItems} />
