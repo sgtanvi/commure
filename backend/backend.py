@@ -1,3 +1,4 @@
+from typing import Optional, Union, List
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -7,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
-from typing import Optional, Union, List
 import shutil
 import os
 import uvicorn
