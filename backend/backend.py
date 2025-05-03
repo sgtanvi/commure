@@ -128,7 +128,7 @@ async def generate_medication_plan(data: MedicationRequest):
         html_output = generate_medication_summary(meds_str, profile_str)
         return {"html": html_output}
     except Exception as e:
-        print(f"Error generating plan: {e}")
+        print(f"Error gen-erating plan: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/upload/")
@@ -187,7 +187,7 @@ async def get_active_prescriptions(user_id: str = Path(...)):
 
     return {"user_id": user_id, "active_prescriptions": active_prescriptions}
 
-# ✅ NEW Gemini Summary Endpoint
+# NEW Gemini Summary Endpoint
 @app.get("/summaries/{user_id}")
 async def get_gemini_summary(user_id: str = Path(...)):
     user = await prescriptions_collection.find_one({"user_id": user_id})
@@ -211,3 +211,24 @@ async def get_gemini_summary(user_id: str = Path(...)):
         return {"html": html_output}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+def main():
+    try:
+        HOST = os.getenv("HOST")
+        PORT = int(os.getenv("PORT"))
+    except Exception:
+        print(
+            "Error: Please make sure you have set the HOST and PORT environment variables correctly."
+        )
+        exit(2)
+    uvicorn.run(
+        app,
+        host=HOST,
+        port=PORT,
+        log_level="info",
+    )
+
+
+if __name__ == "__main__":
+    main()
