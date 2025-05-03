@@ -47,7 +47,7 @@ class QueryRequest(BaseModel):
 
 class MedicationEntry(BaseModel):
     name: str
-    definition: str
+    definition: Optional[str] = None
 
 class PatientProfile(BaseModel):
     age: int
