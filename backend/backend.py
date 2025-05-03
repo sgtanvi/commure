@@ -13,7 +13,7 @@ import os
 import uvicorn
 
 ##### Custom Libraries
-from pinecone_query import init_resources, clear_resources, retrieve_drugs
+from pinecone_query import init_resources, clear_resources, retrieve_drugs, get_medication_definitions_for_gemini
 from gemini_response import generate_medication_summary
 from db import prescriptions_collection, users_collection
 
