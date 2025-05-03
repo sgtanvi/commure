@@ -8,5 +8,6 @@ pandas==2.2.2
 pydantic==2.7.0
 pinecone==6.0.2
 tqdm==4.67.1
-
+typing-extensions==4.13.2
+torch==2.7.0
 
