@@ -5,7 +5,8 @@ import './App.css'
 import { AppHeader } from './components/organisms/app-header'
 import SignIn from './components/organisms/sign-in'
 import { useEffect, useState } from 'react'
-
+import AllergiesPage from './components/organisms/allergies'
+import ConditionsPage from './components/organisms/conditions'
 export interface User {
   firstname: string
   lastname: string
@@ -33,13 +34,31 @@ function App() {
     documents: str | None = None
  */}
 
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem('user');
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  
+  const [userId, setUserId] = useState<string | null>(() => {
+    return localStorage.getItem('userId');
+  });
 
   useEffect(() => {
+    console.log('user changed', user);
     if (user) {
-      console.log(user)
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
     }
-  }, [user])
+  }, [user]);
+
+  useEffect(() => {
+    if (userId) {
+      localStorage.setItem('userId', userId);
+    } else {
+      localStorage.removeItem('userId');
+    }
+  }, [userId]);
 
   return (
     <HelmetProvider>
@@ -47,12 +66,12 @@ function App() {
         <Toaster />
         <div className='flex flex-col w-full min-h-screen'>
           <Routes>
-            <Route path='/' element = {<AppHeader user={user}/>}>
+            <Route path='/' element = {<AppHeader user={user} setUser={setUser} />}>
               <Route index element={<div>prescriptions</div>} />
-              <Route path = "/conditions" element = {<div>conditions</div>}/>
-              <Route path = "/allergies" element = {<div>allergies</div>}/>
+              <Route path = "/conditions" element = {<ConditionsPage user={user} />}/>
+              <Route path = "/allergies" element = {<AllergiesPage user={user} />}/>
             </Route>
-            <Route path='/loginsignup' element={<SignIn setUser={setUser} />} />
+            <Route path='/loginsignup' element={<SignIn setUser={setUser} setUserId={setUserId} />} />
           </Routes>
         </div>
       </BrowserRouter>

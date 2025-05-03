@@ -22,9 +22,10 @@ import { User } from "../../App";
 
 interface AppHeaderProps {
     user: User | null
+    setUser: (user: User | null) => void
 }
 
-export function AppHeader({ user }: AppHeaderProps) {
+export function AppHeader({ user, setUser }: AppHeaderProps) {
     const [sidebarOpen, setSidebarOpen] = useState(false)
     const isMobile = useIsMobile()
 
@@ -153,6 +154,16 @@ export function AppHeader({ user }: AppHeaderProps) {
                     }}
                     >
                         <Typography variant="body2" sx={{fontWeight: 700}} color="black">{user.firstname} {user.lastname}</Typography>
+                        <Button
+                            color="inherit"
+                            disableFocusRipple={true}
+                            disableRipple={true}
+                            onClick={() => {
+                                setUser(null);
+                            }}
+                        >
+                            Logout
+                        </Button>
                     </Box>}
                 </Toolbar>
             </MuiAppBar>

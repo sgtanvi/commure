@@ -59,9 +59,10 @@ const Card = styled(MuiCard)(({ theme }) => ({
 
     interface SignInProps {
         setUser: (user: User) => void
+        setUserId: (userId: string) => void
     }
 
-    export default function SignIn({ setUser }: SignInProps) {
+    export default function SignIn({ setUser, setUserId }: SignInProps) {
     const [emailError, setEmailError] = React.useState(false);
     const [emailErrorMessage, setEmailErrorMessage] = React.useState('');
     const [firstnameError, setFirstnameError] = React.useState(false);
@@ -103,6 +104,9 @@ const Card = styled(MuiCard)(({ theme }) => ({
 
         console.log(newUser);
         setUser(newUser);
+
+        //TODO: get user id from backend
+        setUserId("123");
         navigate('/');
     };
 
