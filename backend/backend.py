@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
-from typing import Union, List
+from typing import Optional, Union, List
 import shutil
 import os
 import uvicorn
@@ -16,9 +16,6 @@ import uvicorn
 from pinecone_query import init_resources, clear_resources, retrieve_drugs
 from gemini_response import generate_medication_summary
 from db import prescriptions_collection
-
-#####
-
 
 load_dotenv()
 UPLOAD_DIR = "uploads"
@@ -156,46 +153,24 @@ async def generate_medication_plan(data: MedicationRequest):
     except Exception as e:
         print(f"Error generating plan: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-        
 
 
-@app.get("/prescriptions/{user_id}")
-async def get_active_prescriptions(user_id: str = Path(...)):
-    user = await prescriptions_collection.find_one({"user_id": user_id})
-    
-    if not user:
-        return {"user_id": user_id, "prescriptions": []}
-    
-    active_prescriptions = []
 
-    for doc in user.get("documents", []):
-        # If single-med format
-        if "pres_name" in doc and doc.get("active"):
-            active_prescriptions.append({
-                "pres_name": doc["pres_name"],
-                "pres_strength": doc.get("pres_strength"),
-                "directions": doc.get("directions"),
-                "date_prescribed": doc.get("date_prescribed"),
-                "family_member_name": doc.get("family_member_name"),
-                "num_refills": doc.get("num_refills"),
-                "date_uploaded": doc.get("date_uploaded")
-            })
+class Prescription(BaseModel):
+    pres_name: str
+    pres_strength: str
+    refills: int
+    date_prescribed: str
+    active: bool
 
-        # If multi-med format
-        if "prescriptions" in doc:
-            for med in doc["prescriptions"]:
-                if med.get("active"):
-                    active_prescriptions.append({
-                        "pres_name": med["pres_name"],
-                        "pres_strength": med.get("pres_strength"),
-                        "date_prescribed": doc.get("date_prescribed"),
-                        "family_member_name": doc.get("family_member_name"),
-                        "num_refills": doc.get("num_refills"),
-                        "date_uploaded": doc.get("date_uploaded")
-                    })
-                    
-    return {"user_id": user_id, "active_prescriptions": active_prescriptions}
+class PrescriptionDocument(BaseModel):
+    prescriptions: List[Prescription]
+    date_uploaded: datetime
 
+class UserData(BaseModel):
+    user_id: str
+    family_members: Optional[List[str]] = []
+    documents: List[PrescriptionDocument] = []
 
 @app.post("/upload/")
 async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(...)):
@@ -207,29 +182,54 @@ async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(
         with open(file_path, "wb") as f:
             shutil.copyfileobj(file.file, f)
 
-        parsed_data = {
+        prescription_data = {
             "prescriptions": [
-                {"pres_name": "TEMAZEPAM", "pres_strength": "10 mg", "active": True},
-                {"pres_name": "CEFUROXIME", "pres_strength": "1.5 g", "active": True},
-                {"pres_name": "METRONIDAZOLE", "pres_strength": "500 mg", "active": True},
-                {"pres_name": "BRUFEN", "pres_strength": "800 mg", "active": True}
+                {"pres_name": "TEMAZEPAM", "pres_strength": "10 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
+                {"pres_name": "CEFUROXIME", "pres_strength": "1.5 g", "refills": 2, "date_prescribed": "2025-04-04", "active": True},
+                {"pres_name": "METRONIDAZOLE", "pres_strength": "500 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
+                {"pres_name": "BRUFEN", "pres_strength": "800 mg", "refills": 0, "date_prescribed": "2025-04-04", "active": True}
             ],
-            "date_prescribed": "2025-04-04",
-            "family_member_name": "Unknown",
-            "num_refills": 0,
             "date_uploaded": datetime.now(timezone.utc)
         }
 
         await prescriptions_collection.update_one(
             {"user_id": user_id},
-            {"$push": {"documents": parsed_data}},
+            {
+                "$setOnInsert": {"family_members": ["mom456", "dad789"]},
+                "$push": {"documents": prescription_data}
+            },
             upsert=True
         )
 
         os.remove(file_path)
 
-        return {"message": "Hardcoded prescription saved", "data": parsed_data}
+        return {"message": "Hardcoded prescription saved", "data": prescription_data}
     
     except Exception as e:
         print("Internal Server Error:", e)
         return JSONResponse(status_code=500, content={"error": str(e)})
+
+
+@app.get("/prescriptions/{user_id}")
+async def get_active_prescriptions(user_id: str = Path(...)):
+    user = await prescriptions_collection.find_one({"user_id": user_id})
+    
+    if not user:
+        return {"user_id": user_id, "prescriptions": []}
+
+    active_prescriptions = []
+
+    for doc in user.get("documents", []):
+        for med in doc.get("prescriptions", []):
+            if med.get("active"):
+                active_prescriptions.append({
+                    "pres_name": med.get("pres_name"),
+                    "pres_strength": med.get("pres_strength"),
+                    "refills": med.get("refills"),
+                    "date_prescribed": med.get("date_prescribed"),
+                    "date_uploaded": doc.get("date_uploaded")
+                })
+
+    return {"user_id": user_id, "active_prescriptions": active_prescriptions}
+
+
