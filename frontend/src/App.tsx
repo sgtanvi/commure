@@ -5,6 +5,7 @@ import './App.css'
 import { AppHeader } from './components/organisms/app-header'
 import SignIn from './components/organisms/sign-in'
 import LandingPage from './components/pages/LandingPage'
+import SignUp from './components/organisms/sign-up'
 function App() {
 
   return (
@@ -17,6 +18,7 @@ function App() {
               <Route index element={<LandingPage/>} />
             </Route>
             <Route path='/loginsignup' element={<SignIn />} />
+            <Route path='/signup' element={<SignUp />} />
           </Routes>
         </div>
       </BrowserRouter>

@@ -352,10 +352,10 @@ async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(
         prescription_data = {
             "user_id": user_id,
             "prescriptions": [
-                {"pres_name": "TEMAZEPAM", "pres_strength": "10 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
-                {"pres_name": "CEFUROXIME", "pres_strength": "1.5 g", "refills": 2, "date_prescribed": "2025-04-04", "active": True},
-                {"pres_name": "METRONIDAZOLE", "pres_strength": "500 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
-                {"pres_name": "BRUFEN", "pres_strength": "800 mg", "refills": 0, "date_prescribed": "2025-04-04", "active": True}
+                {"name": "TEMAZEPAM", "pres_strength": "10 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
+                {"name": "CEFUROXIME", "pres_strength": "1.5 g", "refills": 2, "date_prescribed": "2025-04-04", "active": True},
+                {"name": "METRONIDAZOLE", "pres_strength": "500 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
+                {"name": "BRUFEN", "pres_strength": "800 mg", "refills": 0, "date_prescribed": "2025-04-04", "active": True}
             ],
             "date_uploaded": datetime.now(timezone.utc)
         }
@@ -403,7 +403,11 @@ async def get_active_prescriptions(user_id: str = Path(...)):
 
     return {"user_id": user_id, "active_prescriptions": active_prescriptions}
 
+<<<<<<< HEAD
 # NEW Gemini Summary Endpoint
+=======
+
+>>>>>>> 6ada41e (changes)
 @app.get("/summaries/{user_id}")
 async def get_gemini_summary(user_id: str = Path(...)):
     user = await prescriptions_collection.find_one({"user_id": user_id})
@@ -414,7 +418,7 @@ async def get_gemini_summary(user_id: str = Path(...)):
     for doc in user.get("documents", []):
         for med in doc.get("prescriptions", []):
             if med.get("active"):
-                meds.append(f"- {med.get('pres_name')}: {med.get('pres_strength')}")
+                meds.append(f"- {med.get('name')}: {med.get('pres_strength')}")
 
     if not meds:
         raise HTTPException(status_code=404, detail="No active prescriptions.")
