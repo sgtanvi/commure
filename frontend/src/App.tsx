@@ -4,10 +4,10 @@ import { Toaster } from 'react-hot-toast'
 import './App.css'
 import { AppHeader } from './components/organisms/app-header'
 import SignIn from './components/organisms/sign-in'
-import LandingPage from './components/pages/LandingPage'
 import { useEffect, useState } from 'react'
 import AllergiesPage from './components/organisms/allergies'
 import ConditionsPage from './components/organisms/conditions'
+import PrescriptionForm from './components/organisms/prescription-form'
 export interface User {
   firstname: string
   lastname: string
@@ -16,7 +16,21 @@ export interface User {
   conditions: string[]
   allergies: string[]
   family_members: string[]
-  documents: string
+  documents: PrescriptionDocument 
+}
+
+export interface Prescription {
+  pres_name: string
+  pres_strength: string
+  refills: number
+  date_prescribed: string
+  active: boolean
+}
+
+export interface PrescriptionDocument {
+  user_id: string
+  prescriptions: Prescription[]
+  date_uploaded: string
 }
 
 function App() {
@@ -33,6 +47,20 @@ function App() {
     family_members: Optional[List[str]] = []
     #_id of the prescription document
     documents: str | None = None
+
+
+
+    class Prescription(BaseModel):
+    pres_name: str
+    pres_strength: str
+    refills: int
+    date_prescribed: str
+    active: bool
+
+class PrescriptionDocument(BaseModel):
+    user_id: str
+    prescriptions: List[Prescription]
+    date_uploaded: datetime
  */}
 
   const [user, setUser] = useState<User | null>(() => {
@@ -68,7 +96,7 @@ function App() {
         <div className='flex flex-col w-full min-h-screen'>
           <Routes>
             <Route path='/' element = {<AppHeader user={user} setUser={setUser} />}>
-              <Route index element={<div>prescriptions</div>} />
+              <Route index element={<PrescriptionForm user={user} setUser={setUser} />} />
               <Route path = "/conditions" element = {<ConditionsPage user={user} />}/>
               <Route path = "/allergies" element = {<AllergiesPage user={user} />}/>
             </Route>

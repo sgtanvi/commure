@@ -19,22 +19,30 @@ const allergiesPage = ({ user }: AllergiesPageProps) => {
 
 
     const [newAllergy, setNewAllergy] = useState<string>("");
+    const [allergies, setAllergies] = useState<string[]>(user?.allergies || []);
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         const trimmedAllergy = newAllergy.trim();
         if (trimmedAllergy && user) {
             // Check if the allergy already exists (case-insensitive)
-            const allergyExists = user.allergies.some(
+            const allergyExists = allergies.some(
                 allergy => allergy.toLowerCase() === trimmedAllergy.toLowerCase()
             );
             
             if (!allergyExists) {
-                // Add the new allergy to user.allergies only
-                user.allergies.push(trimmedAllergy);
-                // Force a re-render by using the spread operator
+                // Create a new array instead of modifying the original
+                const updatedAllergies = [...allergies, trimmedAllergy];
+                
+                // Update user.allergies by replacing it with the new array
+                user.allergies = [...updatedAllergies];
+                
+                // Update local state
+                setAllergies(updatedAllergies);
+                
+                // Clear the input field
                 setNewAllergy("");
             } else {
-                // Optionally: Provide feedback that the allergy already exists
+                // Provide feedback that the allergy already exists
                 alert("This allergy is already in your list");
                 setNewAllergy("");
             }

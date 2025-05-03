@@ -14,6 +14,7 @@ const conditionsPage = ({ user }: ConditionsPageProps) => {
             console.log('navigating to login/signup');
             navigate("/loginsignup");
         }
+        setConditions(user?.conditions || []);
     }, [user]);
 
 

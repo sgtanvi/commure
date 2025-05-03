@@ -99,7 +99,11 @@ const Card = styled(MuiCard)(({ theme }) => ({
             conditions: [],
             allergies: [],
             family_members: [],
-            documents: "",
+            documents: {
+                user_id: "",
+                prescriptions: [],
+                date_uploaded: "",
+            },
         }
 
         console.log(newUser);
