@@ -183,7 +183,7 @@ class PrescriptionDocument(BaseModel):
     date_uploaded: datetime
 
 class UserData(BaseModel):
-    user_id: str | None = None
+    user_id: Union[str, None] = None 
     first_name: str
     last_name: str
     email: str
@@ -192,7 +192,7 @@ class UserData(BaseModel):
     allergies: List[str] = []
     family_members: Optional[List[str]] = []
     #_id of the prescription document
-    documents: str | None = None
+    documents: Union[str, None] = None
 
 """
 user sign up
