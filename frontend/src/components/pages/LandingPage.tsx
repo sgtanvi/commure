@@ -16,15 +16,35 @@ interface Prescription {
 
 export default function LandingPage() {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([])
+  const [summaries, setSummaries] = useState<string>('')
   const [loading, setLoading] = useState(true)
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const res = await axios.get('http://localhost:8000/prescriptions/abc')
-        setPrescriptions(res.data.active_prescriptions || [])
+        const active = res.data.active_prescriptions || []
+        setPrescriptions(active)
+
+        if (active.length > 0) {
+          const medDefs = active.map((p: { pres_name: any; pres_strength: any }) => ({
+            name: p.pres_name,
+            definition: `${p.pres_name} ${p.pres_strength}`
+          }))
+          const payload = {
+            medications: medDefs,
+            profile: {
+              age: 30,
+              conditions: [],
+              allergies: []
+            }
+          }
+          const geminiRes = await axios.post('http://localhost:8000/generate_plan', payload)
+          setSummaries(geminiRes.data.html || '')
+        }
       } catch (err) {
-        console.error('Failed to fetch prescriptions:', err)
+        console.error('Failed to fetch prescriptions or summary:', err)
         setPrescriptions([])
       } finally {
         setLoading(false)
@@ -59,13 +79,17 @@ export default function LandingPage() {
           {prescriptions.map((prescription, index) => (
             <Box
               key={index}
+              onMouseEnter={() => setHoveredIndex(index)}
+              onMouseLeave={() => setHoveredIndex(null)}
               sx={{
-                width: '300px',
+                width: hoveredIndex === index ? '360px' : '300px',
+                transition: 'all 0.3s ease',
                 backgroundColor: '#1e1e1e',
                 color: '#fff',
                 borderRadius: 2,
                 p: 2,
                 boxShadow: 3,
+                overflow: 'hidden',
               }}
             >
               <Typography variant="h6" gutterBottom>
@@ -77,6 +101,22 @@ export default function LandingPage() {
               <Typography variant="caption" color="gray">
                 Uploaded: {new Date(prescription.date_uploaded).toLocaleDateString()}
               </Typography>
+
+              {/* Gemini summary shown on hover */}
+              {hoveredIndex === index && summaries && (
+                <Box
+                  sx={{
+                    mt: 2,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    backgroundColor: '#2a2a2a',
+                    p: 1,
+                    borderRadius: 1,
+                    fontSize: '0.85rem',
+                  }}
+                  dangerouslySetInnerHTML={{ __html: summaries }}
+                />
+              )}
             </Box>
           ))}
         </Box>
