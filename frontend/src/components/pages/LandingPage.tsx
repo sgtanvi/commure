@@ -110,7 +110,12 @@ export default function LandingPage() {
               </Typography>
 
               {/* Gemini summary shown on hover */}
-              {hoveredIndex === index && summaries && (
+              
+            </Box>
+          ))}
+        </Box>
+      )}
+      {summaries && (
                 <Box
                   sx={{
                     mt: 2,
@@ -124,10 +129,7 @@ export default function LandingPage() {
                   dangerouslySetInnerHTML={{ __html: summaries }}
                 />
               )}
-            </Box>
-          ))}
-        </Box>
-      )}
     </Box>
+    
   )
 }
