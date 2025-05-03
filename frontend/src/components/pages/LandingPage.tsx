@@ -23,7 +23,7 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/prescriptions/abc')
+        const res = await axios.get('http://localhost:4000/prescriptions/abc')
         const active = res.data.active_prescriptions || []
         setPrescriptions(active)
 
@@ -47,7 +47,7 @@ export default function LandingPage() {
             },
           }
 
-          const geminiRes = await axios.post('http://localhost:8000/generate_plan', payload)
+          const geminiRes = await axios.post('http://localhost:4000/generate_plan', payload)
           setSummaries(geminiRes.data.html || '')
         }
       } catch (err) {

@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import './App.css'
 import { AppHeader } from './components/organisms/app-header'
 import SignIn from './components/organisms/sign-in'
+import LandingPage from './components/pages/LandingPage'
 import { useEffect, useState } from 'react'
 
 export interface User {
@@ -48,7 +49,7 @@ function App() {
         <div className='flex flex-col w-full min-h-screen'>
           <Routes>
             <Route path='/' element = {<AppHeader user={user}/>}>
-              <Route index element={<div>prescriptions</div>} />
+            <Route index element={<LandingPage />} />
               <Route path = "/conditions" element = {<div>conditions</div>}/>
               <Route path = "/allergies" element = {<div>allergies</div>}/>
             </Route>
