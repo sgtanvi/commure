@@ -23,24 +23,31 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/prescriptions/abc')
+        const res = await axios.get('http://localhost:4000/prescriptions/abc')
         const active = res.data.active_prescriptions || []
         setPrescriptions(active)
 
         if (active.length > 0) {
           const medDefs = active.map((p: { pres_name: any; pres_strength: any }) => ({
             name: p.pres_name,
-            definition: `${p.pres_name} ${p.pres_strength}`
+            definition: `${p.pres_name} ${p.pres_strength}`,
           }))
+
           const payload = {
             medications: medDefs,
             profile: {
+              firstName: 'Test',
+              lastName: 'User',
+              email: 'test@example.com',
+              password: '1234',
               age: 30,
               conditions: [],
-              allergies: []
-            }
+              allergies: [],
+              prescriptions: [],
+            },
           }
-          const geminiRes = await axios.post('http://localhost:8000/generate_plan', payload)
+
+          const geminiRes = await axios.post('http://localhost:4000/generate_plan', payload)
           setSummaries(geminiRes.data.html || '')
         }
       } catch (err) {
