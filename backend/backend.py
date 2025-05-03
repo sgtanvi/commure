@@ -403,11 +403,6 @@ async def get_active_prescriptions(user_id: str = Path(...)):
 
     return {"user_id": user_id, "active_prescriptions": active_prescriptions}
 
-<<<<<<< HEAD
-# NEW Gemini Summary Endpoint
-=======
-
->>>>>>> 6ada41e (changes)
 @app.get("/summaries/{user_id}")
 async def get_gemini_summary(user_id: str = Path(...)):
     user = await prescriptions_collection.find_one({"user_id": user_id})
