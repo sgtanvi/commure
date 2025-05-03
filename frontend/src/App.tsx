@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast'
 import './App.css'
 import { AppHeader } from './components/organisms/app-header'
 import SignIn from './components/organisms/sign-in'
+import LandingPage from './components/pages/LandingPage'
 function App() {
 
   return (
@@ -13,7 +14,7 @@ function App() {
         <div className='flex flex-col w-full min-h-screen'>
           <Routes>
             <Route path='/' element = {<AppHeader/>}>
-              <Route index element={<div>landing page</div>} />
+              <Route index element={<LandingPage/>} />
             </Route>
             <Route path='/loginsignup' element={<SignIn />} />
           </Routes>
