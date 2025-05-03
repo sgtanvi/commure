@@ -30,16 +30,23 @@ export default function LandingPage() {
         if (active.length > 0) {
           const medDefs = active.map((p: { pres_name: any; pres_strength: any }) => ({
             name: p.pres_name,
-            definition: `${p.pres_name} ${p.pres_strength}`
+            definition: `${p.pres_name} ${p.pres_strength}`,
           }))
+
           const payload = {
             medications: medDefs,
             profile: {
+              firstName: 'Test',
+              lastName: 'User',
+              email: 'test@example.com',
+              password: '1234',
               age: 30,
               conditions: [],
-              allergies: []
-            }
+              allergies: [],
+              prescriptions: [],
+            },
           }
+
           const geminiRes = await axios.post('http://localhost:8000/generate_plan', payload)
           setSummaries(geminiRes.data.html || '')
         }
