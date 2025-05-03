@@ -13,8 +13,8 @@ import os
 import uvicorn
 
 ##### Custom Libraries
-from pinecone_query import init_resources, clear_resources, retrieve_drugs
-from gemini_response import generate_medication_summary
+from pinecone_query import init_resources, clear_resources, retrieve_drugs, get_medication_definitions_for_gemini
+from gemini_response import generate_medication_summary 
 from db import prescriptions_collection
 
 load_dotenv()
@@ -119,18 +119,12 @@ async def query_drug(request: QueryRequest):
 input example
 {
   "medications": [
-    {
-      "name": "Atorvastatin",
-      "definition": "Atorvastatin is used to lower cholesterol and belongs to the statin class of drugs."
-    },
-    {
-      "name": "Lisinopril",
-      "definition": "Lisinopril is used to treat high blood pressure and heart failure."
-    }
+    { "name": "Lisinopril" },
+    { "name": "Ibuprofen" }
   ],
   "profile": {
     "age": 65,
-    "conditions": ["hypertension", "high cholesterol"],
+    "conditions": ["hypertension", "osteoarthritis"],
     "allergies": ["penicillin"]
   }
 }
@@ -141,7 +135,9 @@ async def generate_medication_plan(data: MedicationRequest):
     if not data.medications:
         raise HTTPException(status_code=400, detail="Medication list is empty.")
     try:
-        meds_str = "\n".join([f"- {m.name}: {m.definition}" for m in data.medications])
+        med_names = [m.name for m in data.medications]
+        pinecone_defs = get_medication_definitions_for_gemini(med_names)
+        meds_str = "\n".join([f"- {m['name']}: {m['definition']}" for m in pinecone_defs])
         profile_str = (
             f"Age: {data.profile.age}\n"
             f"Conditions: {', '.join(data.profile.conditions) or 'None'}\n"
