@@ -1,3 +1,4 @@
+from typing import Optional, Union, List
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from dotenv import load_dotenv
@@ -7,13 +8,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from pinecone import Pinecone
 from sentence_transformers import SentenceTransformer
-from typing import Optional, Union, List
 import shutil
 import os
 import uvicorn
 
 ##### Custom Libraries
-from pinecone_query import init_resources, clear_resources, retrieve_drugs
+from pinecone_query import init_resources, clear_resources, retrieve_drugs, get_medication_definitions_for_gemini
 from gemini_response import generate_medication_summary
 from db import prescriptions_collection, users_collection
 
@@ -73,6 +73,7 @@ class Prescription(BaseModel):
     active: bool
 
 class PrescriptionDocument(BaseModel):
+    user_id: str
     prescriptions: List[Prescription]
     date_uploaded: datetime
 
@@ -177,8 +178,7 @@ class Prescription(BaseModel):
     active: bool
 
 class PrescriptionDocument(BaseModel):
-    #_id of the prescription
-    user_id = str
+    user_id: str
     prescriptions: List[Prescription]
     date_uploaded: datetime
 
@@ -266,22 +266,6 @@ class MedicationRequest(BaseModel):
     medications: list[MedicationEntry]
     profile: PatientProfile
 
-class Prescription(BaseModel):
-    pres_name: str
-    pres_strength: str
-    refills: int
-    date_prescribed: str
-    active: bool
-
-class PrescriptionDocument(BaseModel):
-    prescriptions: List[Prescription]
-    date_uploaded: datetime
-
-class UserData(BaseModel):
-    user_id: str
-    family_members: Optional[List[str]] = []
-    documents: List[PrescriptionDocument] = []
-
 # === API Routes ===
 
 @app.get("/")
@@ -352,10 +336,10 @@ async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(
         prescription_data = {
             "user_id": user_id,
             "prescriptions": [
-                {"pres_name": "TEMAZEPAM", "pres_strength": "10 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
-                {"pres_name": "CEFUROXIME", "pres_strength": "1.5 g", "refills": 2, "date_prescribed": "2025-04-04", "active": True},
-                {"pres_name": "METRONIDAZOLE", "pres_strength": "500 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
-                {"pres_name": "BRUFEN", "pres_strength": "800 mg", "refills": 0, "date_prescribed": "2025-04-04", "active": True}
+                {"name": "TEMAZEPAM", "pres_strength": "10 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
+                {"name": "CEFUROXIME", "pres_strength": "1.5 g", "refills": 2, "date_prescribed": "2025-04-04", "active": True},
+                {"name": "METRONIDAZOLE", "pres_strength": "500 mg", "refills": 1, "date_prescribed": "2025-04-04", "active": True},
+                {"name": "BRUFEN", "pres_strength": "800 mg", "refills": 0, "date_prescribed": "2025-04-04", "active": True}
             ],
             "date_uploaded": datetime.now(timezone.utc)
         }
@@ -403,7 +387,6 @@ async def get_active_prescriptions(user_id: str = Path(...)):
 
     return {"user_id": user_id, "active_prescriptions": active_prescriptions}
 
-# NEW Gemini Summary Endpoint
 @app.get("/summaries/{user_id}")
 async def get_gemini_summary(user_id: str = Path(...)):
     user = await prescriptions_collection.find_one({"user_id": user_id})
@@ -414,7 +397,7 @@ async def get_gemini_summary(user_id: str = Path(...)):
     for doc in user.get("documents", []):
         for med in doc.get("prescriptions", []):
             if med.get("active"):
-                meds.append(f"- {med.get('pres_name')}: {med.get('pres_strength')}")
+                meds.append(f"- {med.get('name')}: {med.get('pres_strength')}")
 
     if not meds:
         raise HTTPException(status_code=404, detail="No active prescriptions.")
