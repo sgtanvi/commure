@@ -27,6 +27,7 @@ async def lifespan(app: FastAPI):
     yield
     clear_resources()
 
+
 app = FastAPI(lifespan=lifespan)
 router = APIRouter()
 
