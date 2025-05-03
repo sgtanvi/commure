@@ -10,5 +10,12 @@ pinecone==6.0.2
 tqdm==4.67.1
 typing-extensions==4.13.2
 torch==2.7.0
+<<<<<<< Updated upstream
 motor==3.7.0
+=======
+<<<<<<< HEAD
+=======
+motor==3.7.0
+>>>>>>> 4e08f4e31d311650261971970d45ba6e89a679bd
+>>>>>>> Stashed changes
 
