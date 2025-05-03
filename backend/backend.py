@@ -73,6 +73,7 @@ class Prescription(BaseModel):
     active: bool
 
 class PrescriptionDocument(BaseModel):
+    user_id: str
     prescriptions: List[Prescription]
     date_uploaded: datetime
 
@@ -177,8 +178,7 @@ class Prescription(BaseModel):
     active: bool
 
 class PrescriptionDocument(BaseModel):
-    #_id of the prescription
-    user_id = str
+    user_id: str
     prescriptions: List[Prescription]
     date_uploaded: datetime
 
