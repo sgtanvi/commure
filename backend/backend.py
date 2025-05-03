@@ -1,183 +1,86 @@
-# keep in alphabetical order to keep it clean
-from contextlib import asynccontextmanager
-from dotenv import load_dotenv
-from fastapi import APIRouter, Request, FastAPI, File, HTTPException, UploadFile
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Path
 from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from pinecone import Pinecone
-from sentence_transformers import SentenceTransformer
-from typing import Union, List
-
-import os
+from db import prescriptions_collection
+from datetime import datetime, timezone
 import shutil
-import uvicorn
+import os
 
-### Custom libraries
-from pinecone_query import init_resources, clear_resources, retrieve_drugs
-from gemini_response import generate_medication_summary
-
-###
+app = FastAPI()
+UPLOAD_DIR = "uploads"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 
-load_dotenv()
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    init_resources()
-    yield
-    clear_resources()
-
-app = FastAPI(lifespan=lifespan)
-router = APIRouter()
-
-origins = [
-    '*'
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,  # Allow credentials (e.g., cookies, authorization headers)
-    allow_methods=["*"],    # Specify allowed HTTP methods (or use wildcard "*")
-    allow_headers=["*"],    # Specify allowed HTTP headers (or use wildcard "*")
-)
-
-
-# CLASSES
-''' class for vector db _ query'''
-class QueryRequest(BaseModel):
-    query_text: str
+@app.get("/prescriptions/{user_id}")
+async def get_active_prescriptions(user_id: str = Path(...)):
+    user = await prescriptions_collection.find_one({"user_id": user_id})
     
-''' class for gemini_response'''
-class MedicationEntry(BaseModel): #workin progress
-    name: str
-    definition: str
+    if not user:
+        return {"user_id": user_id, "prescriptions": []}
 
-class PatientProfile(BaseModel):
-    age: int
-    conditions: list[str] = []
-    allergies: list[str] = []
+    active_prescriptions = []
 
-class MedicationRequest(BaseModel):
-    medications: list[MedicationEntry]
-    profile: PatientProfile
+    for doc in user.get("documents", []):
+        # If single-med format
+        if "pres_name" in doc and doc.get("active"):
+            active_prescriptions.append({
+                "pres_name": doc["pres_name"],
+                "pres_strength": doc.get("pres_strength"),
+                "directions": doc.get("directions"),
+                "date_prescribed": doc.get("date_prescribed"),
+                "family_member_name": doc.get("family_member_name"),
+                "num_refills": doc.get("num_refills"),
+                "date_uploaded": doc.get("date_uploaded")
+            })
 
-@app.get("/")
-async def api_entry():
-    return {"Welcome": "RX-Check API"}
-
-# Endpoint to handle CSV upload
-@app.post("/upload-csv/")
-async def upload_csv(file: UploadFile = File(...)):
-    return {"Function": "Function"}
-
-## RESTRICTION: Frontend/client	Calls /query-drug/ repeatedly, stores list so implementation responsibility is on client##
-'''
-input: 
-{
-  "query_text": "ethinyl estradiol"
-}
-
-Output:
-2 modes: semantic or exact
-{
-  "results": [
-    {
-      "query": "ethinyl estradiol",
-      "mode": "semantic",
-      "results": [
-        {
-          "score": 0.718, <---- Note. In exact, you wont get a score.
-          "generic_name": "ethinyl estradiol and norgestimate (oral route)",
-          "drug_class": "Contraceptives",
-          "alcohol": "X",
-          "pregnancy": "X",
-          "csa": "N"
-        },
-        
-        ...
-    }]
-
-'''
-
-@app.post("/query-drug/")
-async def query_drug(request: QueryRequest):
-    query_text = request.query_text.strip()
-
-    if not query_text:
-        raise HTTPException(status_code=400, detail="Query is empty.")
-
-    # You can still split by commas if needed:
-    queries = [q.strip() for q in query_text.split(",") if q.strip()]
-
-    results = []
-    for q in queries:
-        result = retrieve_drugs(q)
-        results.append({"query": q, **result})
-
-    return JSONResponse(content={"results": results})
+        # If multi-med format
+        if "prescriptions" in doc:
+            for med in doc["prescriptions"]:
+                if med.get("active"):
+                    active_prescriptions.append({
+                        "pres_name": med["pres_name"],
+                        "pres_strength": med.get("pres_strength"),
+                        "date_prescribed": doc.get("date_prescribed"),
+                        "family_member_name": doc.get("family_member_name"),
+                        "num_refills": doc.get("num_refills"),
+                        "date_uploaded": doc.get("date_uploaded")
+                    })
+                    
+    return {"user_id": user_id, "active_prescriptions": active_prescriptions}
 
 
-##### GEMINI ######
-
-'''
-input example
-{
-  "medications": [
-    {
-      "name": "Atorvastatin",
-      "definition": "Atorvastatin is used to lower cholesterol and belongs to the statin class of drugs."
-    },
-    {
-      "name": "Lisinopril",
-      "definition": "Lisinopril is used to treat high blood pressure and heart failure."
-    }
-  ],
-  "profile": {
-    "age": 65,
-    "conditions": ["hypertension", "high cholesterol"],
-    "allergies": ["penicillin"]
-  }
-}
-
-'''
-@app.post("/generate_plan")
-async def generate_medication_plan(data: MedicationRequest):
-    if not data.medications:
-        raise HTTPException(status_code=400, detail="Medication list is empty.")
+@app.post("/upload/")
+async def upload_prescription(user_id: str = Form(...), file: UploadFile = File(...)):
     try:
-        meds_str = "\n".join([f"- {m.name}: {m.definition}" for m in data.medications])
-        profile_str = (
-            f"Age: {data.profile.age}\n"
-            f"Conditions: {', '.join(data.profile.conditions) or 'None'}\n"
-            f"Allergies: {', '.join(data.profile.allergies) or 'None'}"
+        if file.content_type != "application/pdf":
+            raise HTTPException(status_code=400, detail="Invalid file type. Must be PDF.")
+        
+        file_path = os.path.join(UPLOAD_DIR, file.filename)
+        with open(file_path, "wb") as f:
+            shutil.copyfileobj(file.file, f)
+
+        parsed_data = {
+            "prescriptions": [
+                {"pres_name": "TEMAZEPAM", "pres_strength": "10 mg", "active": True},
+                {"pres_name": "CEFUROXIME", "pres_strength": "1.5 g", "active": True},
+                {"pres_name": "METRONIDAZOLE", "pres_strength": "500 mg", "active": True},
+                {"pres_name": "BRUFEN", "pres_strength": "800 mg", "active": True}
+            ],
+            "date_prescribed": "2025-04-04",
+            "family_member_name": "Unknown",
+            "num_refills": 0,
+            "date_uploaded": datetime.now(timezone.utc)
+        }
+
+        await prescriptions_collection.update_one(
+            {"user_id": user_id},
+            {"$push": {"documents": parsed_data}},
+            upsert=True
         )
 
-        html_output = generate_medication_summary(meds_str, profile_str)
-        return {"html": html_output}
+        os.remove(file_path)
+
+        return {"message": "Hardcoded prescription saved", "data": parsed_data}
+    
     except Exception as e:
-        print(f"Error generating plan: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-        
-    
-
-def main():
-    try:
-        HOST = os.getenv("HOST")
-        PORT = int(os.getenv("PORT"))
-    except Exception:
-        print(
-            "Error: Please make sure you have set the HOST and PORT environment variables correctly."
-        )
-        exit(2)
-    uvicorn.run(
-        app,
-        host=HOST,
-        port=PORT,
-        log_level="info",
-    )
-
-
-if __name__ == "__main__":
-    main()
+        print("Internal Server Error:", e)
+        return JSONResponse(status_code=500, content={"error": str(e)})
