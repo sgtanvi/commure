@@ -85,34 +85,39 @@ const Card = styled(MuiCard)(({ theme }) => ({
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault(); // Prevent default form submission
-        
+      
         if (!validateInputs()) {
-            return;
+          return;
         }
-        
+      
         const data = new FormData(event.currentTarget);
-        const newUser = {
-            email: data.get('email') as string,
-            password: data.get('password') as string,
-            firstname: data.get('firstname') as string,
-            lastname: data.get('lastname') as string,
-            conditions: [],
-            allergies: [],
-            family_members: [],
-            documents: {
-                user_id: "",
-                prescriptions: [],
-                date_uploaded: "",
-            },
-        }
-
+      
+        const newUser: User = {
+          email: data.get('email') as string,
+          password: data.get('password') as string,
+          firstname: data.get('firstname') as string,
+          lastname: data.get('lastname') as string,
+          conditions: [],
+          allergies: [],
+          family_members: [],
+          documents: [
+            {
+              user_id: "", // Can be updated after registration
+              prescriptions: [],
+              date_uploaded: new Date().toISOString(), // Use current time
+            }
+          ],
+        };
+      
         console.log(newUser);
         setUser(newUser);
-
-        //TODO: get user id from backend
+      
+        // TODO: Get user ID from backend if needed
         setUserId("123");
+      
         navigate('/');
-    };
+      };
+      
 
     const validateInputs = () => {
         const email = document.getElementById('email') as HTMLInputElement;

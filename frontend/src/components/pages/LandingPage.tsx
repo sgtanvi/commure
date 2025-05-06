@@ -5,6 +5,11 @@ import {
   Box,
   CircularProgress,
 } from '@mui/material'
+import {User} from "../../App"
+
+interface LandingPageProps {
+  user: User | null
+}
 
 interface Prescription {
   pres_name: string
@@ -14,7 +19,7 @@ interface Prescription {
   date_uploaded: string
 }
 
-export default function LandingPage() {
+export default function LandingPage({ user }: LandingPageProps) {
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([])
   const [summaries, setSummaries] = useState<string>('')
   const [loading, setLoading] = useState(true)
@@ -23,7 +28,7 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await axios.get('http://localhost:4000/prescriptions/abc')
+        const res = await axios.get('http://localhost:8000/prescriptions/abc')
         const active = res.data.active_prescriptions || []
         setPrescriptions(active)
 
@@ -36,18 +41,18 @@ export default function LandingPage() {
           const payload = {
             medications: medDefs,
             profile: {
-              firstName: 'Test',
-              lastName: 'User',
-              email: 'test@example.com',
-              password: '1234',
-              age: 30,
+              firstName: 'Jane',
+              lastName: 'Doe',
+              email: 'jane@example.com',
+              password: 'abc123',
+              age: 65,
               conditions: [],
               allergies: [],
               prescriptions: [],
             },
           }
 
-          const geminiRes = await axios.post('http://localhost:4000/generate_plan', payload)
+          const geminiRes = await axios.post('http://localhost:8000/generate_plan', payload)
           setSummaries(geminiRes.data.html || '')
         }
       } catch (err) {
@@ -64,6 +69,9 @@ export default function LandingPage() {
   return (
     <Box sx={{ p: 4, backgroundColor: '#121212', minHeight: '100vh', color: '#fff' }}>
       <Typography variant="h4" align="center" gutterBottom>
+        Welcome {user?.firstname}
+      </Typography>
+      <Typography variant="h6" align="center" gutterBottom>
         Your Active Prescriptions
       </Typography>
 
@@ -96,7 +104,6 @@ export default function LandingPage() {
                 borderRadius: 2,
                 p: 2,
                 boxShadow: 3,
-                overflow: 'hidden',
               }}
             >
               <Typography variant="h6" gutterBottom>
@@ -108,28 +115,26 @@ export default function LandingPage() {
               <Typography variant="caption" color="gray">
                 Uploaded: {new Date(prescription.date_uploaded).toLocaleDateString()}
               </Typography>
-
-              {/* Gemini summary shown on hover */}
-              
             </Box>
           ))}
         </Box>
       )}
+
       {summaries && (
-                <Box
-                  sx={{
-                    mt: 2,
-                    maxHeight: '200px',
-                    overflowY: 'auto',
-                    backgroundColor: '#2a2a2a',
-                    p: 1,
-                    borderRadius: 1,
-                    fontSize: '0.85rem',
-                  }}
-                  dangerouslySetInnerHTML={{ __html: summaries }}
-                />
-              )}
+        <Box
+          sx={{
+            mt: 4,
+            px: 2,
+            py: 3,
+            backgroundColor: '#181818',
+            borderRadius: 2,
+            color: '#eee',
+            fontSize: '1rem',
+            lineHeight: 1.7,
+          }}
+          dangerouslySetInnerHTML={{ __html: summaries }}
+        />
+      )}
     </Box>
-    
   )
 }
