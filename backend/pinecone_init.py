@@ -6,6 +6,7 @@ import pandas as pd
 from uuid import uuid4
 from tqdm import tqdm
 
+# This script will only run once, unless the database needs to be updated or changed.
 
 load_dotenv()
 pinecone_api = os.getenv("PINECONE_API_KEY")
@@ -13,20 +14,20 @@ INDEX_NAME = "medmate-interactions"
 NAMESPACE = "default"
 MODEL_NAME = "all-MiniLM-L6-v2"
 
-# Initialize Pinecone client
+# initialize Pinecone client
 pc = Pinecone(api_key=pinecone_api)
 
-# Create a new serverless index if not already created
-# Just connect to the existing index by name
+# create a new serverless index if not already created
+# just connect to the existing index by name
 index_description = pc.describe_index(name=INDEX_NAME)
 idx = pc.Index(host=index_description.host)
 
 
-# Load drug dataset
+# load drug dataset
 df = pd.read_csv("drugs.csv").fillna("Unknown")
 model = SentenceTransformer(MODEL_NAME)
 
-# Build and upsert embeddings
+# build and upsert embeddings
 vectors = []
 for _, row in df.iterrows():
     generic_name = row["generic_name"]

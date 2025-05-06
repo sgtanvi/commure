@@ -89,8 +89,12 @@ async def api_entry():
     return {"Welcome": "RX-Check API"}
 
 ## RESTRICTION: Frontend/client	Calls /query-drug/ repeatedly, stores list so implementation responsibility is on client##
+# README: This approach is not safe for production, as it offloads critical logic and validation to the client side.
+# Note: We were aware of this security and scalability concern but accepted it for the sake of rapid development during the hackathon.
 '''
-input: 
+/query-drug/" endpoint
+
+Input (JSON):
 {
     "query_text": "ethinyl estradiol"
 }
@@ -114,7 +118,8 @@ Output:
         
         ...
     }]
-
+    
+    Note: Exact match mode will not include a "score" field.
 '''
 
 @app.post("/query-drug/")
@@ -135,7 +140,7 @@ async def query_drug(request: QueryRequest):
 ##### GEMINI ######
 
 '''
-input example
+input (JSON) example
 {
   "medications": [
     { "name": "Lisinopril" },
@@ -170,29 +175,29 @@ async def generate_medication_plan(data: MedicationRequest):
 
 
 
-class Prescription(BaseModel):
-    pres_name: str
-    pres_strength: str
-    refills: int
-    date_prescribed: str
-    active: bool
+# class Prescription(BaseModel):
+#     pres_name: str
+#     pres_strength: str
+#     refills: int
+#     date_prescribed: str
+#     active: bool
 
-class PrescriptionDocument(BaseModel):
-    user_id: str
-    prescriptions: List[Prescription]
-    date_uploaded: datetime
+# class PrescriptionDocument(BaseModel):
+#     user_id: str
+#     prescriptions: List[Prescription]
+#     date_uploaded: datetime
 
-class UserData(BaseModel):
-    user_id: Union[str, None] = None 
-    first_name: str
-    last_name: str
-    email: str
-    password: str
-    conditions: List[str] = []
-    allergies: List[str] = []
-    family_members: Optional[List[str]] = []
-    #_id of the prescription document
-    documents: Union[str, None] = None
+# class UserData(BaseModel):
+#     user_id: Union[str, None] = None 
+#     first_name: str
+#     last_name: str
+#     email: str
+#     password: str
+#     conditions: List[str] = []
+#     allergies: List[str] = []
+#     family_members: Optional[List[str]] = []
+#     #_id of the prescription document
+#     documents: Union[str, None] = None
 
 """
 user sign up

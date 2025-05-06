@@ -56,6 +56,7 @@ def retrieve_drugs(query_text:str, top_k:int = 10):
     
     return {"mode": "semantic", "results": format_results(semantic)}
 
+# Send medication information to gemini
 def get_medication_definitions_for_gemini(med_names: list[str], top_k: int = 1):
     model = shared_state["model"]
     index = shared_state["index"]
@@ -116,6 +117,7 @@ Alcohol Interaction Warning: {alcohol}"""
         else:
             description = "No definition available."
 
+        #Add to list for semantic
         meds_with_defs.append({
             "name": name,
             "definition": description.strip()
@@ -124,6 +126,7 @@ Alcohol Interaction Warning: {alcohol}"""
     return meds_with_defs
 
 
+# Helper function
 def format_results(matches):
     return [
         {

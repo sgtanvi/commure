@@ -40,10 +40,14 @@ cd commure
 Create a `.env` file in the root of your backend with:
 
 ```env
-PINECONE_API_KEY=your_pinecone_key
-GEMINI_API_KEY=your_gemini_key
-HOST=localhost
+HOST=0.0.0.0
 PORT=4000
+LOCATION=us-central1
+PINECONE_API_KEY= YOUR_API_KEY
+GEMINI_API_KEY= YOUR_API_KEY
+PINECONE_ENVO=us-east-1
+MONGODB_URI=mongodb://localhost:27017
+DB_NAME=rxcheck
 ```
 
 ### 3. Install backend dependencies
