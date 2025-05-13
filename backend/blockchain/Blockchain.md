@@ -21,6 +21,7 @@ To enhance **transparency and verifiability**, RX-Check now includes **blockchai
 3. **Verifiable Audit Trail**
 
    * Users or auditors can view transaction records on **Sepolia Etherscan**.
+   * [DEVELOPER]: Note that you can use Ethereum Sepolia Faucet from google which is currently beta.
 
 ---
 
