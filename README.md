@@ -62,7 +62,11 @@ pip install -r requirements.txt
 ```bash
 uvicorn backend:app --reload --host localhost --port 4000
 ```
+or
 
+```bash
+python backend.py
+```
 ### 5. Start frontend
 
 ```bash
