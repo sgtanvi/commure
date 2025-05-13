@@ -1,5 +1,6 @@
 # keep in alphabetical order to keep it clean
 from contextlib import asynccontextmanager
+from blockchain_client import log_drug_query
 from dotenv import load_dotenv
 from fastapi import APIRouter, Request, FastAPI, File, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
@@ -107,6 +108,8 @@ async def query_drug(request: QueryRequest):
 
     if not query_text:
         raise HTTPException(status_code=400, detail="Query is empty.")
+    
+    tx_hash = log_drug_query(query_text) #blockchain query log
 
     # You can still split by commas if needed:
     queries = [q.strip() for q in query_text.split(",") if q.strip()]
